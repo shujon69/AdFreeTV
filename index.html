@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AdFree TV Premium</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="logo/Logo-PNG.png">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
+
+    <!-- HLS Player Library -->
+    <script src="hls.js"></script>
+
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header Area -->
+    <header>
+        <div class="logo-container">
+            <div class="logo-main">AdFree<span class="tv">TV</span></div>
+            <div class="logo-sub">Premium IPTV</div>
+        </div>
+
+        <div class="status-bar">
+            <span id="statusTime">12:14:46 PM</span>
+
+                <div class="footer-developer">Designed & Developed by
+                <a
+                  href="https://shujon69.github.io/PoftFolio"
+                  target="_blank"
+                  class="developer-name"
+                  > Shujon Sheikh</a
+                >
+              </div>          
+        </div>
+
+        <div class="header-icons">
+            <button class="icon-btn" onclick="scrollToPlayer()" title="Player"><i class="fa-solid fa-tv"></i></button>
+            <button class="icon-btn" onclick="scrollToCategories()" title="Channels"><i class="fa-solid fa-list"></i></button>
+            <button class="icon-btn" id="headerUpdateBtn" style="display:none;" onclick="handleUpdateDownload(event)" title="Update Available"><i class="fa-solid fa-rocket"></i></button>
+            <button class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+        </div>
+    </header>
+
+    <!-- Main Application Area -->
+    <main>
+
+        <!-- Left Side: Video Player -->
+        <div class="player-section">
+            <div class="player-wrapper">
+                <div class="video-container">
+                    <video id="video" autoplay playsinline autopictureinpicture></video>
+
+                    <!-- Loading Spinner -->
+                    <div id="playerLoader" class="player-loader hidden">
+                        <div class="spinner"></div>
+                        <span>Buffering stream ..</span>
+                    </div>
+                </div>
+
+                <!-- Custom Control Bar Overlay -->
+                <div class="custom-controls" id="customControls">
+                    <button class="control-btn" onclick="prevChannel()" title="Previous Channel">
+                        <i class="fa-solid fa-backward-step"></i>
+                    </button>
+                    <button class="control-btn play-pause-btn" onclick="togglePlay()" title="Play/Pause">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                    <button class="control-btn" onclick="nextChannel()" title="Next Channel">
+                        <i class="fa-solid fa-forward-step"></i>
+                    </button>
+                    <button class="control-btn" onclick="toggleMute()" title="Mute" id="volumeBtn">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Channel Info Card (below player on smaller screens) -->
+            <div class="current-channel-card" id="currentChannelCard">
+                <div class="current-channel-logo-container">
+                    <div id="currentChannelFallback" class="fallback-avatar hidden">N</div>
+                    <img id="currentChannelLogo" src="" alt="" onerror="handleCurrentLogoError()">
+                </div>
+                <div class="current-channel-info">
+                    <div class="live-badge">
+                        <div class="live-dot"></div> LIVE
+                    </div>
+                    <h2 id="currentChannelTitle">Select a channel</h2>
+                    <p id="currentChannelCategory">M3U Stream Player</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Sidebar -->
+        <div class="sidebar">
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="search-input" id="search" placeholder="Search channels... (Press /)" onkeyup="searchChannels()">
+                <button class="clear-search-btn" id="clearSearch" onclick="clearSearchInput()" style="display: none">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Category Filters -->
+            <div class="categories-wrapper">
+                <div class="categories-container" id="categoriesContainer">
+                    <div class="category-list" id="categoryList">
+                        <button class="filter-pill active" data-category="All" onclick="filterCategory('All', this)">All</button>
+                        <button class="filter-pill" data-category="Favorites" onclick="filterCategory('Favorites', this)">
+                            <i class="fa-solid fa-star" style="font-size: 10px; margin-right: 4px; color: #ffcc00;"></i> Favorites
+                        </button>
+                        <!-- Dynamic category pills will be inserted here -->
+                    </div>
+                </div>
+                <button class="scroll-indicator scroll-left hidden" id="scrollLeftBtn" onclick="scrollCategories('left')" title="Scroll Left">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button class="scroll-indicator scroll-right" id="scrollRightBtn" onclick="scrollCategories('right')" title="Scroll Right">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="channel-list-header">ALL CHANNELS (<span id="channelCount">0</span>)</div>
+
+            <!-- Scrollable Channel List -->
+            <div class="channel-list" id="channelGrid">
+                <!-- Dynamic channel items will be inserted here -->
+            </div>
+
+            <div id="noResults" class="no-results-msg hidden">
+                <span><i class="fa-solid fa-tv" style="font-size: 2rem; opacity: 0.5;"></i></span>
+                <p>No channels found matching your search</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Warning Modal (HTTP mixed content) -->
+    <div id="warningModal" class="modal-overlay hidden" aria-hidden="true">
+        <div class="modal-box">
+            <h3>Security Notice</h3>
+            <p>This stream uses HTTP which may be blocked by your browser on this HTTPS page. Try using the Android app for full compatibility.</p>
+            <button class="modal-btn" onclick="closeWarningModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- Info Modal (Privacy/Terms) -->
+    <div id="infoModal" class="modal-overlay hidden" aria-hidden="true">
+        <div class="modal-box">
+            <h3 id="modalTitle">Info</h3>
+            <p id="modalText"></p>
+            <button class="modal-btn" onclick="closeInfoModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Update Modal -->
+    <div id="updateModal" class="modal-overlay hidden" aria-hidden="true">
+        <div class="modal-box">
+            <h3>Update Available</h3>
+            <div id="updateChangelog"></div>
+            <div class="modal-actions">
+                <a id="updateDownloadLink" href="#" class="modal-btn primary" onclick="handleUpdateDownload(event)">Download</a>
+                <button class="modal-btn" onclick="closeUpdateModal()">Later</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disclaimer Modal -->
+    <div id="disclaimerModal" class="modal-overlay hidden" aria-hidden="true">
+        <div class="modal-box">
+            <h3>Disclaimer</h3>
+            <p>We do not host any of the video content. All streams are sourced from publicly available playlists. By using this app, you agree to comply with your local copyright and streaming laws.</p>
+            <button class="modal-btn primary" onclick="acceptDisclaimer()">I Agree</button>
+        </div>
+    </div>
+
+    <!-- Mobile Smart App Banner -->
+    <div id="mobileAppBanner" class="mobile-app-banner hidden">
+        <div class="banner-content">
+            <button class="banner-close-btn" onclick="closeAppBanner()" aria-label="Close Banner">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <img src="logo/Logo-PNG.png" alt="AdFree TV Logo" class="banner-logo">
+            <div class="banner-text">
+                <h4>AdFree TV Android App</h4>
+                <p>Download the app for the best experience.</p>
+            </div>
+        </div>
+        <a href="https://github.com/Shariar-Ahamed/online-tv-streaming-platform/releases" class="banner-download-btn download-apk-link" target="_blank">
+            <i class="fa-brands fa-android"></i> Download
+        </a>
+    </div>
+
+    <!-- Custom Logic -->
+    <script src="script.js"></script>
+</body>
+</html>
