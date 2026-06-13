@@ -1123,9 +1123,13 @@ function setupMobileAppBanner() {
     })
     .then(data => {
       if (data && data.assets && data.assets.length > 0) {
-        const apkAsset = data.assets.find(asset => asset.name.endsWith(".apk"));
-        if (apkAsset && apkAsset.browser_download_url) {
-          latestApkUrl = apkAsset.browser_download_url;
+        // Look specifically for AdFreeTV APK
+        const apkAsset = data.assets.find(asset => asset.name.startsWith("AdFreeTV") && asset.name.endsWith(".apk"));
+        // Fallback to any APK if AdFreeTV named one not found
+        const fallbackApk = data.assets.find(asset => asset.name.endsWith(".apk"));
+        const targetApk = apkAsset || fallbackApk;
+        if (targetApk && targetApk.browser_download_url) {
+          latestApkUrl = targetApk.browser_download_url;
           document.querySelectorAll(".download-apk-link").forEach(link => {
             link.setAttribute("href", latestApkUrl);
           });
@@ -1158,7 +1162,7 @@ function closeAppBanner() {
 }
 
 /* IN-APP UPDATE CHECKER (ANDROID APP ONLY) */
-const currentBuildCode = 14;
+const currentBuildCode = 15;
 
 function checkForUpdates() {
   if (!window.Capacitor) return;
