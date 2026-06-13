@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupLiveStats();
   setupOrientationExitFullscreen();
   setupExternalLinks();
-  setupMobileAppBanner();
   checkForUpdates();
   checkDisclaimer();
   setupPictureInPicture();
@@ -1107,57 +1106,6 @@ function closeInfoModal() {
     modal.classList.add("hidden");
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
-  }
-}
-
-/* MOBILE SMART APP BANNER & DYNAMIC APK DOWNLOAD */
-let latestApkUrl = "https://github.com/Shariar-Ahamed/online-tv-streaming-platform/releases";
-
-function setupMobileAppBanner() {
-  if (window.Capacitor) return;
-
-  fetch("https://api.github.com/repos/Shariar-Ahamed/online-tv-streaming-platform/releases/latest")
-    .then(response => {
-      if (!response.ok) throw new Error("GitHub API error");
-      return response.json();
-    })
-    .then(data => {
-      if (data && data.assets && data.assets.length > 0) {
-        // Look specifically for AdFreeTV APK
-        const apkAsset = data.assets.find(asset => asset.name.startsWith("AdFreeTV") && asset.name.endsWith(".apk"));
-        // Fallback to any APK if AdFreeTV named one not found
-        const fallbackApk = data.assets.find(asset => asset.name.endsWith(".apk"));
-        const targetApk = apkAsset || fallbackApk;
-        if (targetApk && targetApk.browser_download_url) {
-          latestApkUrl = targetApk.browser_download_url;
-          document.querySelectorAll(".download-apk-link").forEach(link => {
-            link.setAttribute("href", latestApkUrl);
-          });
-        }
-      }
-    })
-    .catch(err => {
-      console.warn("Failed to retrieve latest APK release from GitHub API, falling back to release page:", err);
-    });
-
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-  const isBannerHidden = localStorage.getItem("alpha_tv_hide_app_banner") === "true";
-
-  if (isMobile && !isBannerHidden) {
-    const banner = document.getElementById("mobileAppBanner");
-    if (banner) {
-      setTimeout(() => {
-        banner.classList.remove("hidden");
-      }, 2000);
-    }
-  }
-}
-
-function closeAppBanner() {
-  const banner = document.getElementById("mobileAppBanner");
-  if (banner) {
-    banner.classList.add("hidden");
-    localStorage.setItem("alpha_tv_hide_app_banner", "true");
   }
 }
 
